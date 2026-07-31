@@ -18,6 +18,7 @@ in
     docker-compose-language-service
     dockerfile-language-server
     fd
+    gcc
     git
     go
     gofumpt
