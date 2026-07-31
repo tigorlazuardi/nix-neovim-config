@@ -5,6 +5,8 @@
     recursive = true;
   };
 
+  home.sessionVariables.NVIM_TREESITTER_NIX = "${pkgs.vimPlugins.nvim-treesitter.withAllGrammars}";
+
   home.packages = with pkgs; [
     astro-language-server
     biome
