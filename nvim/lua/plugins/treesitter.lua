@@ -1,4 +1,4 @@
-local treesitter = assert(vim.env.NVIM_TREESITTER_NIX, "NVIM_TREESITTER_NIX is not set; activate Home Manager")
+local treesitter = vim.fn.stdpath("data") .. "/nix/nvim-treesitter"
 
 return {
   {

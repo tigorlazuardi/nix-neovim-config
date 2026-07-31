@@ -8,7 +8,7 @@ in
     recursive = true;
   };
 
-  home.sessionVariables.NVIM_TREESITTER_NIX = "${treesitterWithAllGrammars}";
+  xdg.dataFile."nvim/nix/nvim-treesitter".source = treesitterWithAllGrammars;
 
   home.packages = with pkgs; [
     astro-language-server
