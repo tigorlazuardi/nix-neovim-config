@@ -1,11 +1,14 @@
 { pkgs, ... }:
+let
+  treesitterWithAllGrammars = pkgs.callPackage ./nix/treesitter-with-all-grammars.nix { };
+in
 {
   xdg.configFile."nvim" = {
     source = ./nvim;
     recursive = true;
   };
 
-  home.sessionVariables.NVIM_TREESITTER_NIX = "${pkgs.vimPlugins.nvim-treesitter.withAllGrammars}";
+  home.sessionVariables.NVIM_TREESITTER_NIX = "${treesitterWithAllGrammars}";
 
   home.packages = with pkgs; [
     astro-language-server
