@@ -40,6 +40,7 @@
     svelte-language-server
     tailwindcss-language-server
     taplo
+    tree-sitter
     typescript-go
     typescript-language-server
     unzip
