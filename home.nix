@@ -44,7 +44,6 @@
     taplo
     tree-sitter
     typescript-go
-    typescript-language-server
     unzip
     vscode-langservers-extracted
     yaml-language-server
