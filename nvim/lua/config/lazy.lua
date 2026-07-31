@@ -15,6 +15,15 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+    -- ponytail: serialize network work; raise concurrency when slow installs stop failing.
+    concurrency = 2,
+    git = {
+        throttle = {
+            enabled = true,
+            rate = 1,
+            duration = 1000,
+        },
+    },
     spec = {
         -- add LazyVim and import its plugins
         { "LazyVim/LazyVim", import = "lazyvim.plugins" },

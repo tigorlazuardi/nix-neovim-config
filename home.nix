@@ -6,14 +6,44 @@
   };
 
   home.packages = with pkgs; [
+    astro-language-server
     biome
     cargo
+    delve
+    docker-compose-language-service
+    dockerfile-language-server
+    fd
+    git
     go
+    gofumpt
+    golangci-lint
+    gomodifytags
     gopls
+    gotools
+    hadolint
+    impl
+    lazygit
     lsof
+    lua-language-server
+    markdown-toc
+    markdownlint-cli2
+    nil
+    nixfmt
+    nodejs
+    prettier
+    ripgrep
+    shfmt
+    sops
+    sqlfluff
     statix
+    stylua
+    svelte-language-server
+    tailwindcss-language-server
+    taplo
     typescript-go
     typescript-language-server
     unzip
+    vscode-langservers-extracted
+    yaml-language-server
   ];
 }
