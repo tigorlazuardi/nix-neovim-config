@@ -47,7 +47,7 @@ in
     tailwindcss-language-server
     taplo
     tree-sitter
-    typescript-go
+    typescript
     unzip
     vscode-langservers-extracted
     yaml-language-server
