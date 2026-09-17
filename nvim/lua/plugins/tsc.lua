@@ -3,7 +3,8 @@ return {
   opts = {
     servers = {
       vtsls = { enabled = false },
-      tsgo = { enabled = true },
+      tsgo = { enabled = false },
+      tsc = { enabled = true },
     },
   },
 }
