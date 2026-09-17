@@ -57,12 +57,28 @@
 
         local-updater-home = updaterHome.activationPackage;
 
+        daily-updater-self-check =
+          pkgs.runCommand "check-nix-neovim-config-daily-updater"
+            {
+              nativeBuildInputs = [
+                pkgs.bash
+                pkgs.git
+                pkgs.jq
+              ];
+            }
+            ''
+              RUNNER=${./scripts/daily-update.sh} \
+                bash ${./tests/daily-updater-self-check.sh}
+              touch "$out"
+            '';
+
         local-updater-self-check =
           pkgs.runCommand "check-nix-neovim-config-local-updater"
             {
               nativeBuildInputs = [
                 pkgs.bash
                 pkgs.git
+                pkgs.python3
                 pkgs.util-linux
               ];
             }

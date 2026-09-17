@@ -21,10 +21,15 @@ let
   updater = pkgs.writeShellApplication {
     name = "nix-neovim-config-local-update";
     runtimeInputs = [
+      pkgs.bubblewrap
       pkgs.coreutils
       pkgs.git
+      pkgs.gnutar
+      pkgs.jq
+      pkgs.neovim
       pkgs.nix
       pkgs.openssh
+      pkgs.python3
       cfg.package
       pkgs.util-linux
     ];
@@ -73,6 +78,7 @@ in
         Type = "oneshot";
         ExecStart = lib.getExe updater;
         Environment = [
+          "LOCAL_UPDATE_DAILY_RUNNER=${./scripts/daily-update.sh}"
           "LOCAL_UPDATE_RECOVERY_PROMPT=${recoveryPrompt}"
           "LOCAL_UPDATE_STATE_DIR=${stateDirectory}"
           "XDG_CACHE_HOME=${stateDirectory}/cache"
@@ -84,10 +90,7 @@ in
         UMask = "0077";
         ProtectSystem = "strict";
         ProtectHome = "read-only";
-        ReadWritePaths = [
-          stateDirectory
-          "-${config.home.homeDirectory}/.pi"
-        ];
+        ReadWritePaths = [ stateDirectory ];
         PrivateTmp = true;
         NoNewPrivileges = true;
         LockPersonality = true;
