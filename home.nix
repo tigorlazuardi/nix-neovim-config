@@ -52,6 +52,16 @@ in
       example = "/home/user/.ssh/config";
       description = "Absolute runtime SSH config path used by Git; contents stay outside the Nix store.";
     };
+
+    recoveryModel = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "openai-codex/gpt-5.6-sol";
+      description = ''
+        Provider/model passed as `--model` to the bounded Pi recovery invocation.
+        `null` omits the flag so recovery inherits the Pi default provider/model.
+      '';
+    };
   };
 
   config = {
@@ -85,7 +95,8 @@ in
           "PI_OFFLINE=1"
           "PI_TELEMETRY=0"
         ]
-        ++ lib.optional (cfg.ssh.configFile != null) "GIT_SSH_COMMAND=${lib.getExe sshWrapper}";
+        ++ lib.optional (cfg.ssh.configFile != null) "GIT_SSH_COMMAND=${lib.getExe sshWrapper}"
+        ++ lib.optional (cfg.recoveryModel != null) "LOCAL_UPDATE_RECOVERY_MODEL=${cfg.recoveryModel}";
         TimeoutStartSec = "6h";
         UMask = "0077";
         ProtectSystem = "strict";

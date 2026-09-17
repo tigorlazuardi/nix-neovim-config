@@ -271,6 +271,12 @@ prepare_recovery_workspace || fail 'recovery workspace preparation failed'
 build_recovery_bundle || fail 'recovery request construction failed'
 pi_executable=$(command -v pi) || fail 'Pi executable unavailable'
 sandbox_runner=${LOCAL_UPDATE_SANDBOX_RUNNER:-bwrap}
+# Unset means recovery inherits the user's Pi default provider/model; pinning is opt-in.
+recovery_model=${LOCAL_UPDATE_RECOVERY_MODEL:-}
+model_args=()
+if [ -n "$recovery_model" ]; then
+  model_args=(--model "$recovery_model")
+fi
 journal 'Pi recovery started'
 if ! "$sandbox_runner" \
   --die-with-parent --new-session --unshare-all --share-net --cap-drop ALL \
@@ -282,7 +288,7 @@ if ! "$sandbox_runner" \
   --setenv PI_CODING_AGENT_DIR /pi-config \
   --setenv PI_OFFLINE 1 --setenv PI_TELEMETRY 0 \
   -- "$pi_executable" --print --no-session --approve \
-    --model openai-codex/gpt-5.6-sol --thinking high \
+    "${model_args[@]}" --thinking high \
     --no-extensions --no-skills --no-prompt-templates --no-context-files --no-tools \
     "$(cat "$prompt_file")
 

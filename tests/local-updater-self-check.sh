@@ -56,9 +56,14 @@ set -euo pipefail
 printf '%s\n' pi >>"$TEST_EVENTS"
 printf '%s\n' pi >>"$PI_COUNT"
 args=" $* "
-for required in ' --print ' ' --no-session ' ' --approve ' ' --model openai-codex/gpt-5.6-sol ' ' --thinking high ' ' --no-extensions ' ' --no-skills ' ' --no-prompt-templates ' ' --no-context-files ' ' --no-tools '; do
+for required in ' --print ' ' --no-session ' ' --approve ' ' --thinking high ' ' --no-extensions ' ' --no-skills ' ' --no-prompt-templates ' ' --no-context-files ' ' --no-tools '; do
   case "$args" in *"$required"*) ;; *) exit 2 ;; esac
 done
+if [ -n "${PI_EXPECT_MODEL:-}" ]; then
+  case "$args" in *" --model $PI_EXPECT_MODEL "*) ;; *) exit 2 ;; esac
+else
+  case "$args" in *' --model '*) exit 2 ;; esac
+fi
 case "$args" in
   *'one-shot data-only compatibility-recovery planner'*'recovery request JSON follows through standard input'*) ;;
   *) exit 2 ;;
@@ -167,10 +172,12 @@ unset PI_MALICIOUS
 [ "$(git --git-dir="$remote" show main:home.nix)" = original ]
 [ "$(cat "$LOCAL_UPDATE_STATE_DIR/recovery-pi-config/auth.json")" = '{"token":"rotated"}' ]
 
-# The next recovery reuses the rotated credential instead of stale user auth.
+# The next recovery reuses the rotated credential and a pinned recovery model.
+export LOCAL_UPDATE_RECOVERY_MODEL=openai-codex/gpt-5.6-sol PI_EXPECT_MODEL=openai-codex/gpt-5.6-sol
 bash "$tmp/local-update.sh" >/dev/null
 [ "$(git --git-dir="$remote" show main:nvim/lazyvim.json | grep -o '"version": 10')" = '"version": 10' ]
 [ "$(cat "$LOCAL_UPDATE_STATE_DIR/recovery-pi-config/auth.json")" = '{"token":"rotated"}' ]
+unset LOCAL_UPDATE_RECOVERY_MODEL PI_EXPECT_MODEL
 
 # Operational failures stop without invoking Pi.
 git -C "$seed" fetch -q origin main
