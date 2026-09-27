@@ -64,6 +64,12 @@ in
     };
   };
 
+  options.programs.nix-neovim-config.lazyRestore.enable = lib.mkOption {
+    description = "Converge the live lazy.nvim plugin tree to the lock at switch time. Opt-in: machines sharing this module (nspawn boxes) must boot fast and never git-clone plugins during activation.";
+    type = lib.types.bool;
+    default = false;
+  };
+
   config = {
     xdg.configFile."nvim" = {
       source = ./nvim;
@@ -76,19 +82,23 @@ in
     # pinned LazyVim rev differs from the live checkout. Without this, a config
     # referencing a new LazyVim extra (e.g. lang.typescript.tsc) can start nvim
     # against the OLD LazyVim tree and fail with `loadfile(nil)` ("Failed to
-    # load lazyvim.plugins.extras..."). Restore needs network, so failures are
-    # non-fatal and retry at the next switch.
-    home.activation.nixNeovimLazyRestore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      lockRev=$(${pkgs.jq}/bin/jq -r '.LazyVim.commit // empty' "${config.home.homeDirectory}/.config/nvim/lazy-lock.json" 2>/dev/null || true)
-      liveRev=$(${pkgs.git}/bin/git -C "${config.home.homeDirectory}/.local/share/nvim/lazy/LazyVim" rev-parse HEAD 2>/dev/null || true)
-      if [ -n "$lockRev" ] && [ "$lockRev" != "$liveRev" ]; then
-        if ${pkgs.coreutils}/bin/timeout 300 ${lib.getExe pkgs.neovim} --headless "+Lazy! restore" +qa; then
-          echo "nix-neovim-config: lazy.nvim plugins restored to lock"
-        else
-          echo "nix-neovim-config: Lazy restore failed (offline?) - retry next switch" >&2
+    # load lazyvim.plugins.extras..."). Restore needs network and can clone
+    # dozens of plugins, so it is OPT-IN (machines sharing this module, like
+    # the nspawn boxes, must boot in seconds) and skipped when there is no
+    # live LazyVim tree yet (fresh home) - first nvim start installs it anyway.
+    home.activation.nixNeovimLazyRestore = lib.mkIf config.programs.nix-neovim-config.lazyRestore.enable (
+      lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        lockRev=$(${pkgs.jq}/bin/jq -r '.LazyVim.commit // empty' "${config.home.homeDirectory}/.config/nvim/lazy-lock.json" 2>/dev/null || true)
+        liveRev=$(${pkgs.git}/bin/git -C "${config.home.homeDirectory}/.local/share/nvim/lazy/LazyVim" rev-parse HEAD 2>/dev/null || true)
+        if [ -n "$lockRev" ] && [ -n "$liveRev" ] && [ "$lockRev" != "$liveRev" ]; then
+          if ${pkgs.coreutils}/bin/timeout 300 ${lib.getExe pkgs.neovim} --headless "+Lazy! restore" +qa; then
+            echo "nix-neovim-config: lazy.nvim plugins restored to lock"
+          else
+            echo "nix-neovim-config: Lazy restore failed (offline?) - retry next switch" >&2
+          fi
         fi
-      fi
-    '';
+      ''
+    );
 
     home.activation.nixNeovimConfigLocalUpdaterState = lib.mkIf cfg.enable (
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
