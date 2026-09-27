@@ -72,6 +72,24 @@ in
 
     xdg.dataFile."nvim/nix/nvim-treesitter".source = treesitterWithAllGrammars;
 
+    # Converge the live lazy.nvim plugin tree to the committed lock when the
+    # pinned LazyVim rev differs from the live checkout. Without this, a config
+    # referencing a new LazyVim extra (e.g. lang.typescript.tsc) can start nvim
+    # against the OLD LazyVim tree and fail with `loadfile(nil)` ("Failed to
+    # load lazyvim.plugins.extras..."). Restore needs network, so failures are
+    # non-fatal and retry at the next switch.
+    home.activation.nixNeovimLazyRestore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      lockRev=$(${pkgs.jq}/bin/jq -r '.LazyVim.commit // empty' "${config.home.homeDirectory}/.config/nvim/lazy-lock.json" 2>/dev/null || true)
+      liveRev=$(${pkgs.git}/bin/git -C "${config.home.homeDirectory}/.local/share/nvim/lazy/LazyVim" rev-parse HEAD 2>/dev/null || true)
+      if [ -n "$lockRev" ] && [ "$lockRev" != "$liveRev" ]; then
+        if ${pkgs.coreutils}/bin/timeout 300 ${lib.getExe pkgs.neovim} --headless "+Lazy! restore" +qa; then
+          echo "nix-neovim-config: lazy.nvim plugins restored to lock"
+        else
+          echo "nix-neovim-config: Lazy restore failed (offline?) - retry next switch" >&2
+        fi
+      fi
+    '';
+
     home.activation.nixNeovimConfigLocalUpdaterState = lib.mkIf cfg.enable (
       lib.hm.dag.entryAfter [ "writeBoundary" ] ''
         run ${pkgs.coreutils}/bin/install -d -m 0700 -- ${lib.escapeShellArg stateDirectory}
